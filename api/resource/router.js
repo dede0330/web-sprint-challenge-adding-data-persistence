@@ -1,26 +1,34 @@
 // build your `/api/resources` router here
+// build your `/api/resources` router here
 const express = require('express')
-const Resource = require('./model')
+const Resources = require('./model')
 
-const router = express.Router()
+const ResourcesRouter = express.Router()
 
-router.get('/', async (req, res, next) => {
-
-    try{
-        const resources = await Resource.getResources()
-        res.json(resources)
-    } catch (err) {
-        next (err)
-    }
+ResourcesRouter.get('/', (req, res, next) => { 
+  Resources.getResources()
+  .then((resources) => {
+    res.json(resources)
+  })
+  .catch(next)
 })
 
-router.post('/', async (req, res, next) => {
-    try{
-        const newResource = await Resource.createResource(req.body);
-        res.status(201).json(newResource);
-    } catch (err) {
-        next(err);
-    }
+ResourcesRouter.get('/:id', (req, res, next) => {
+const resource_id  = req.params.id
+    Resources.getResourcesById(resource_id)
+        .then(resource => {
+            res.json(resource)
+    })
+.catch(next)
 })
 
-module.exports = router
+ResourcesRouter.post('/', (req, res, next) => {
+  const resource = req.body
+  Resources.add(resource)
+    .then(resource => {
+      res.status(201).json(resource)
+    })
+  .catch(next)
+})
+
+module.exports = ResourcesRouter;

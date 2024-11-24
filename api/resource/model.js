@@ -1,22 +1,25 @@
 // build your `Resource` model here
-const db = require('../../data/dbConfig')
+const db = require('../../data/dbConfig');
 
-const getResources = () => {
-    //response body shoule be: 
-    //[{"resource_id":1,"resource_name":"foo","resource_description":null}]
+
+function getResources() {
     return db('resources')
-        .select('resource_id', 'resource_name', 'resource_description')
+}
+async function getResourcesById(resource_id) {
+    return db('resources').where('resource_id', resource_id).first()
 }
 
-const createResource = async (resource) => {
-    //response body shoule be:
-    //{"resource_id":1,"resource_name":"foo","resource_description":null}
-    const [newResource] = await db('resources')
-        .insert(resource, ['resource_id', 'resource_name', 'resource_description'])
-    return newResource;
+async function add(resource) {
+    const result = await db('resources').insert(resource)
+    .then(([id]) => {
+     return db('resources').where('resource_id', id).first()
+    })
+
+    return result
 }
 
 module.exports = {
     getResources,
-    createResource,
-}
+    getResourcesById,
+    add,
+};

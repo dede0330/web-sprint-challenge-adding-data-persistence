@@ -1,40 +1,59 @@
-// build your `Task` model here
-const db = require('../../data/dbConfig')
+// build your `Project` model here
+const db = require('../../data/dbConfig');
 
-const getTasks = () => {
-    //response body shoule be: 
-    //[{"task_id":1,"task_description":"baz","task_notes":null,"task_completed":false,
-    //"project_name:"bar","project_description":null}]
-    return db('tasks as t')
-        .join('projects as p', 't.project_id', 'p.project_id')
-        .select(
-            't.task_id', 
-            't.task_description', 
-            't.task_notes', 
-            't.task_completed', 
-            'p.project_name',
-            'p.project_description'
-        )
-        .then(tasks => tasks.map(task => ({
-            ...task,
-            task_completed: Boolean(task.task_completed)
-        }))
-    )
-}
 
-const createTask = async (task) => {
-    //response body shoule be:
-    //{"task_id":1,"task_description":"baz","task_notes":null,"task_completed":false,"project_id:1}
-    const [newTask] = await db('tasks')
-        .insert(task, ['task_id', 'task_description', 'task_notes', 'task_completed', 'project_id'])
-    
-    return {
-        ...newTask,
-        task_completed: Boolean(newTask.task_completed)
+async function getProjects() {
+ const row = await db('projects as p')
+ .select(
+  'p.project_name',
+  'p.project_description',
+  'p.project_completed'
+ )
+ .then((projects) => {
+  return projects.map((p) => {
+    if(p.project_completed || !p.project_completed) {
+      return {
+        ...p, 
+        project_completed: p.project_completed === 1 ? true : false
+      }
     }
+  })
+ }) 
+ return row
 }
 
-module.exports = {
-    getTasks,
-    createTask,
+async function getProjectById(project_id) {
+    const row = await db('projects').where('project_id', project_id).first()
+
+    const result = {
+        project_name: row.project_name, 
+        project_description: row.project_description, 
+        project_id: row.project_id, 
+        project_completed: row.project_completed === 1 ? true : false
+    }
+
+    return result 
 }
+
+async function add(project) {
+    const row = await db('projects').insert(project)
+    .then(([id]) => {
+     return db('projects').where('project_id', id).first()
+    })
+
+    const result = {
+      project_name: row.project_name, 
+      project_description: row.project_description, 
+      project_id: row.project_id, 
+      project_completed: row.project_completed === 1 ? true : false
+    }
+
+  return result 
+  }
+
+  
+module.exports = {
+    getProjects,
+    getProjectById,
+    add,
+};

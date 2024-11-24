@@ -1,25 +1,45 @@
 // build your `/api/tasks` router here
 const express = require('express')
-const Task = require('./model')
+const Tasks = require('./model')
 
-const router = express.Router()
+const TasksRouter = express.Router()
 
-router.get('/', async (req, res, next) => {
-    try{
-        const tasks = await Task.getTasks()
-        res.json(tasks)
-    } catch (err) {
-        next (err)
-    }
+
+TasksRouter.get('/', (req, res, next) => { 
+  Tasks.getTasks()
+  .then((tasks) => {
+    res.json(tasks)
+  })
+  .catch(next)
 })
 
-router.post('/', async (req, res, next) => {
-    try{
-        const newTask = await Task.createTask(req.body);
-        res.status(201).json(newTask);
-    } catch (err) {
-        next(err);
-    }
+TasksRouter.get('/:id', (req, res, next) => {
+const task_id  = req.params.id
+    Tasks.getTaskById(task_id)
+        .then(task => {
+            res.json(task)
+    })
+.catch(next)
 })
 
-module.exports = router
+TasksRouter.post('/', (req, res, next) => {
+  const { task_description, task_notes, task_completed, project_id} = req.body
+  if(task_description && project_id) {
+     Tasks.add(req.body)
+    .then(() => {
+      res.status(201).json({
+        task_description: task_description, 
+        task_notes: task_notes ? task_notes : null,
+        task_completed: task_completed  === 1 ? true : false
+      })
+    })
+  .catch(next)
+  } else 
+    res.status(400).json({
+      message: 'Please provide a task description and an id for project.'
+    }
+  )
+})
+
+
+module.exports = TasksRouter;
